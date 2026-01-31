@@ -2,7 +2,8 @@
 	import './app.css';
 	import BackgroundVideo from "./components/BackgroundVideo.svelte";
 	import {Avatar, AvatarImage} from "./components/ui/avatar";
-	import {Button} from "./components/ui/button";
+	import {Button, buttonVariants} from "./components/ui/button";
+    import * as DropdownMenu from "./components/ui/dropdown-menu/";
     import SteamLogin from "./components/SteamLogin.svelte";
     import MoreVertical from "@lucide/svelte/icons/more-vertical";
 
@@ -10,6 +11,14 @@
 
     let nickname = $derived(isLoggedIn ? '用户123456' : '未登录')
     let steamId64 = $derived(isLoggedIn ? '1234567890' : '')
+
+    const login = () => {
+        isLoggedIn = true;
+    }
+
+    const logout = () => {
+        isLoggedIn = false;
+    }
 </script>
 
 
@@ -22,8 +31,7 @@
   	bg-white/20 border-white/20
   	dark:bg-black/40 dark:border-white/10 dark:shadow-2xl
 ">
-    <div class="flex items-center gap-4 p-4 justify-around
-            ">
+    <div class="flex items-center gap-4 p-4 justify-around">
 
         <Avatar class="size-13 rounded-full ring-2 ring-white/50">
             <AvatarImage
@@ -40,14 +48,26 @@
         </div>
 
         {#if isLoggedIn}
-            <Button variant="ghost" size="icon" class="rounded-full">
-                <MoreVertical />
-            </Button>
+            <DropdownMenu.Root>
+                <DropdownMenu.Trigger
+                        class={buttonVariants({ variant: "ghost", size: "icon", class: 'rounded-full' })}
+                >
+                    <MoreVertical />
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content class="w-40  bg-white/30  backdrop-blur-md" align="end">
+                    <DropdownMenu.Label>操作</DropdownMenu.Label>
+                    <DropdownMenu.Group>
+                        <DropdownMenu.Item class="hover:bg-white/50 transition-all" onclick={logout}>
+                            退出登录
+                        </DropdownMenu.Item>
+                    </DropdownMenu.Group>
+                </DropdownMenu.Content>
+            </DropdownMenu.Root>
         {/if}
     </div>
 
     {#if isLoggedIn}
-        <Button variant="outline" onclick={() => {isLoggedIn = false}}>进入平台</Button>
+        <Button variant="outline">进入平台</Button>
     {:else}
         <SteamLogin onclick={() => isLoggedIn = true}/>
     {/if}
