@@ -25,7 +25,7 @@
 <BackgroundVideo/>
 
 <main class="
-	w-1/4
+	w-100
   	flex flex-col items-center p-4 space-y-4
   	backdrop-blur-md border rounded-xl shadow-lg
   	bg-white/20 border-white/20
