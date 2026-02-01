@@ -7,13 +7,19 @@
     import SteamLogin from "./components/SteamLogin.svelte";
     import MoreVertical from "@lucide/svelte/icons/more-vertical";
 
+    const API_SERVER  = import.meta.env.VITE_API_SERVER
+
     let isLoggedIn = $state(true);
 
     let nickname = $derived(isLoggedIn ? '用户123456' : '未登录')
     let steamId64 = $derived(isLoggedIn ? '1234567890' : '')
 
     const login = () => {
-        isLoggedIn = true;
+        const windowKey = 'LoginWindow'
+        const loginWindow = window.open(`${API_SERVER}/auth/steam/redirect_to_steam`, windowKey, 'popup=true');
+        if (!loginWindow) {
+            return alert('登录弹窗被阻拦，请检查你的浏览器...')
+        }
     }
 
     const logout = () => {
@@ -69,7 +75,7 @@
     {#if isLoggedIn}
         <Button variant="outline">进入平台</Button>
     {:else}
-        <SteamLogin onclick={() => isLoggedIn = true}/>
+        <SteamLogin onclick={login}/>
     {/if}
 </main>
 
