@@ -7,7 +7,7 @@
 	import * as DropdownMenu from "./components/ui/dropdown-menu/";
     import SteamLogin from "./components/SteamLogin.svelte";
     import MoreVertical from "@lucide/svelte/icons/more-vertical";
-    import {authState, clearAuthState} from "./lib/store/token";
+    import {authState, clearAuthState, setAuthState} from "./lib/store/token";
     import {profileState, setProfileState} from "./lib/store/profile";
 
     const API_SERVER = import.meta.env.VITE_API_SERVER;
@@ -16,16 +16,16 @@
 
     let isLoadingProfile = $state(true);
 
-    window.addEventListener("message", function (event) {
+    window.addEventListener("message", async (event) => {
         const token = event.data.token;
         isLoadingProfile = true;
-        if (token) {
-            authState.set(token);
-            void setProfileState(token).then(profile => {
-
-            }).finally(() => {
-                isLoadingProfile = false;
-            });
+        try {
+            if (token) {
+                setAuthState(token);
+                await setProfileState(token);
+            }
+        } finally {
+            isLoadingProfile = false;
         }
     });
 
