@@ -2,7 +2,7 @@
 </script>
 
 <video autoplay muted loop>
-    <source src="public/nuke720p.webm" type="video/webm" />
+    <source src="nuke720p.webm" type="video/webm" />
 </video>
 
 <style>
