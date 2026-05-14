@@ -50,6 +50,11 @@
         });
     };
 
+    const enterApp = () => {
+        const appUrl = import.meta.env.VITE_APP_URL;
+        window.location.assign(appUrl);
+    }
+
     onMount(() => {
         const init = async () => {
             const token = $authState;
@@ -128,7 +133,7 @@
             加载中
         </Button>
     {:else if $profileState}
-        <Button variant="outline">进入平台</Button>
+        <Button variant="outline" onclick={enterApp}>进入平台</Button>
     {:else}
         <SteamLogin onclick={login}/>
     {/if}
