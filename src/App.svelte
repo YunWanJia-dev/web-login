@@ -1,18 +1,33 @@
 <script lang="ts">
 	import './app.css';
+	import {onMount} from "svelte";
 	import BackgroundVideo from "./components/BackgroundVideo.svelte";
-	import {Avatar, AvatarImage} from "./components/ui/avatar";
+	import {Avatar, AvatarFallback, AvatarImage} from "./components/ui/avatar";
 	import {Button, buttonVariants} from "./components/ui/button";
-    import * as DropdownMenu from "./components/ui/dropdown-menu/";
+	import * as DropdownMenu from "./components/ui/dropdown-menu/";
     import SteamLogin from "./components/SteamLogin.svelte";
     import MoreVertical from "@lucide/svelte/icons/more-vertical";
+    import {authState, clearAuthState} from "./lib/store/token";
+    import {profileState, setProfileState} from "./lib/store/profile";
 
-    const API_SERVER  = import.meta.env.VITE_API_SERVER
+    const API_SERVER = import.meta.env.VITE_API_SERVER;
 
-    let isLoggedIn = $state(true);
+    const DEFAULT_AVATAR = "https://avatars.cdn.steamchina.queniuam.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
 
-    let nickname = $derived(isLoggedIn ? '用户123456' : '未登录')
-    let steamId64 = $derived(isLoggedIn ? '1234567890' : '')
+    let isLoadingProfile = $state(true);
+
+    window.addEventListener("message", function (event) {
+        const token = event.data.token;
+        isLoadingProfile = true;
+        if (token) {
+            authState.set(token);
+            void setProfileState(token).then(profile => {
+
+            }).finally(() => {
+                isLoadingProfile = false;
+            });
+        }
+    });
 
     const login = () => {
         const windowKey = 'LoginWindow'
@@ -23,8 +38,20 @@
     }
 
     const logout = () => {
-        isLoggedIn = false;
-    }
+        clearAuthState();
+        void setProfileState(null);
+    };
+
+    onMount(() => {
+        const init = async () => {
+            const token = $authState;
+            const profile = await setProfileState(token);
+        };
+
+        void init().finally(() => {
+            isLoadingProfile = false;
+        });
+    });
 </script>
 
 
@@ -40,30 +67,45 @@
     <div class="flex items-center gap-4 p-4 justify-around">
 
         <Avatar class="size-13 rounded-full ring-2 ring-white/50">
-            <AvatarImage
-                    src="https://avatars.cdn.steamchina.queniuam.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg"/>
+            {#if isLoadingProfile}
+                <AvatarFallback class="profile-skeleton"/>
+            {:else}
+                <AvatarImage src={$profileState?.avatarLink ?? DEFAULT_AVATAR} alt={$profileState?.name}/>
+            {/if}
         </Avatar>
 
         <div class="space-y-1 flex-1">
-            <p class="text-base font-sans font-semibold text-slate-900 tracking-tight dark:text-white/90">
-                {nickname}
-            </p>
-            <p class="text-sm font-mono font-medium text-slate-600/80 tracking-tighter dark:text-white/50">
-                {steamId64}
-            </p>
+            {#if isLoadingProfile}
+                <div class="profile-skeleton h-5 w-28 rounded"></div>
+                <div class="profile-skeleton h-4 w-36 rounded"></div>
+            {:else if $profileState}
+                <p class="text-base font-sans font-semibold text-slate-900 tracking-tight dark:text-white/90">
+                    {$profileState.name}
+                </p>
+                <p class="text-sm font-mono font-medium text-slate-600/80 tracking-tighter dark:text-white/50">
+                    {$profileState.steamID64}
+                </p>
+            {:else}
+                <p class="text-base font-sans font-semibold text-slate-900 tracking-tight dark:text-white/90">
+                    未登录
+                </p>
+                <p class="text-sm font-mono font-medium text-slate-600/80 tracking-tighter dark:text-white/50">
+                    请使用 Steam 登录
+                </p>
+            {/if}
         </div>
 
-        {#if isLoggedIn}
+        {#if $profileState && !isLoadingProfile}
             <DropdownMenu.Root>
                 <DropdownMenu.Trigger
                         class={buttonVariants({ variant: "ghost", size: "icon", class: 'rounded-full' })}
                 >
                     <MoreVertical />
                 </DropdownMenu.Trigger>
-                <DropdownMenu.Content class="w-40  bg-white/30  backdrop-blur-md" align="end">
+                <DropdownMenu.Content class="w-40 bg-white/30 backdrop-blur-md" align="end">
                     <DropdownMenu.Label>操作</DropdownMenu.Label>
                     <DropdownMenu.Group>
-                        <DropdownMenu.Item class="hover:bg-white/50 transition-all" onclick={logout}>
+                        <DropdownMenu.Item class="hover:bg-white/50 transition-all" onclick={() => logout()}>
                             退出登录
                         </DropdownMenu.Item>
                     </DropdownMenu.Group>
@@ -72,7 +114,12 @@
         {/if}
     </div>
 
-    {#if isLoggedIn}
+    {#if isLoadingProfile}
+        <Button variant="outline" disabled>
+            <span class="loading-dot"></span>
+            加载中
+        </Button>
+    {:else if $profileState}
         <Button variant="outline">进入平台</Button>
     {:else}
         <SteamLogin onclick={login}/>
@@ -83,7 +130,21 @@
 <style>
 	@reference "tailwindcss";
 
+    main {
+        @apply w-100;
+    }
+
+    .profile-skeleton {
+        @apply animate-pulse bg-white/50 dark:bg-white/20;
+    }
+
+    .loading-dot {
+        @apply size-4 animate-spin rounded-full border-2 border-slate-500/40 border-t-slate-900 dark:border-white/30 dark:border-t-white;
+    }
+
     main :global(> *:not(img)) {
-        @apply rounded-md w-full border border-white/30 bg-white/30 hover:bg-white/50 transition-all;
+        @apply rounded-md w-full border transition-all;
+        /* 浅色模式颜色 */
+        @apply border-white/30 bg-white/30 hover:bg-white/50;
     }
 </style>
