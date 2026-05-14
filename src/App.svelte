@@ -38,8 +38,16 @@
     }
 
     const logout = () => {
-        clearAuthState();
-        void setProfileState(null);
+        isLoadingProfile = true;
+
+        const removeStates = async ()  => {
+            clearAuthState();
+            void setProfileState(null);
+        };
+
+        removeStates().finally(() => {
+            isLoadingProfile = false;
+        });
     };
 
     onMount(() => {
