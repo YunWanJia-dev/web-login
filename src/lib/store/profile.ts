@@ -19,7 +19,7 @@ export const setProfileState = async (token: string | null) => {
   try {
     const response = await fetch(`${API_SERVER}/user-summary/profile/self`, {
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `${token}`,
       },
     });
 
