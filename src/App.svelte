@@ -52,7 +52,7 @@
 
     const enterApp = () => {
         const appUrl = import.meta.env.VITE_APP_URL;
-        window.location.assign(appUrl);
+        window.location.assign(appUrl + "?token=" + $authState);
     }
 
     onMount(() => {
